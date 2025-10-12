@@ -8,62 +8,66 @@ import os
 OLD_DATA_FILE = 'data/tmdb_5000_movies.csv'
 NEW_DATA_FILE = 'data/new_movie_data.csv' 
 MODEL_FILE = 'model.pkl'
-# Define the columns we need from the new data (adjust names if needed!)
-REQUIRED_COLUMNS = ['title', 'overview']
+# CRITICAL: We need 'vote_count' now to filter for the best movies
+REQUIRED_COLUMNS = ['title', 'overview', 'vote_count'] 
 
+# New constant for the final size target
+TARGET_MOVIE_COUNT = 5000 # Keep model size manageable on 512MB RAM
 
 def build_and_save_model():
-    """
-    1. Loads, standardizes, and concatenates two datasets with dtype management.
-    2. Deduplicates movies, prioritizing the newer record.
-    3. Builds and saves the TF-IDF and Cosine Similarity model.
-    """
+    # ... (Load Datasets section remains mostly the same, but ensure we load 'vote_count') ...
     try:
-        # Load Datasets - Use the 'usecols' argument to only load necessary columns
+        # Load Datasets - Ensure 'vote_count' is in the columns of the new file
         df_old = pd.read_csv(OLD_DATA_FILE, usecols=REQUIRED_COLUMNS)
-        
-        # We load the new data only using the required columns. 
-        # This implicitly solves the DtypeWarning by ignoring problematic columns.
         df_new = pd.read_csv(NEW_DATA_FILE, usecols=REQUIRED_COLUMNS) 
         
     except FileNotFoundError as e:
         print(f"Error: One of the data files not found: {e}. Check your 'data/' folder.")
         return
     except ValueError:
-        # Catch case where column names (title/overview) might be different in the new file
-        print("Error: Required columns ('title' and 'overview') might be missing or misspelled in your new dataset.")
+        print("Error: Required columns ('title', 'overview', 'vote_count') not found. Check your new CSV column names!")
         return
 
-
-    # --- Step 1: Combine and Deduplicate ---
-    
-    # Vertical Concatenation: Stacking the new data (keep='first') on top of the old data.
+    # 1. Combine and Deduplicate (same as before)
     combined_df = pd.concat([df_new, df_old], ignore_index=True)
-    
-    # Deduplication: Drop duplicates based on 'title', keeping the FIRST occurrence (the newer one)
     df = combined_df.drop_duplicates(subset=['title'], keep='first')
     df.reset_index(inplace=True, drop=True)
 
-    print(f"Combined dataset size: {len(df_old)} (old) + {len(df_new)} (new) -> {len(df)} (final unique)")
+    print(f"Initial unique dataset size: {len(df)}")
     
-    # --- Step 2: AI Model Building ---
+    # --- STEP 2: CRITICAL SAMPLING FOR MEMORY ---
     
-    # FIX: Use .loc[] to explicitly modify the DataFrame and avoid SettingWithCopyWarning
-    df.loc[:, 'overview'] = df['overview'].fillna('')
+    # Clean 'vote_count' and sort
+    df['vote_count'] = pd.to_numeric(df['vote_count'], errors='coerce').fillna(0)
+    
+    # Keep only the top TARGET_MOVIE_COUNT movies by vote_count
+    df_filtered = df.sort_values('vote_count', ascending=False).head(TARGET_MOVIE_COUNT)
+    df_filtered.reset_index(inplace=True, drop=True)
+    
+    df_final = df_filtered[['title', 'overview']] # Keep only what's needed for the model
+    
+    print(f"Final sampled dataset size for model: {len(df_final)}")
+    
+    # --- STEP 3: AI Model Building on the smaller data ---
+    
+    # FIX: Use .loc[] to explicitly modify the DataFrame
+    df_final.loc[:, 'overview'] = df_final['overview'].fillna('')
     
     # Create TF-IDF Vectorizer
     tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(df['overview'])
+    # Use the smaller DataFrame here!
+    tfidf_matrix = tfidf.fit_transform(df_final['overview']) 
 
     # Calculate Cosine Similarity Matrix
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
     # Save the dataframe indices for quick lookup by title
-    indices = pd.Series(df.index, index=df['title']).drop_duplicates()
+    # Use df_final for the indices map
+    indices = pd.Series(df_final.index, index=df_final['title']).drop_duplicates()
 
-    # Save the necessary components
+    # Save the necessary components (using the smaller df_final)
     with open(MODEL_FILE, 'wb') as f:
-        pickle.dump({'df': df, 'indices': indices, 'cosine_sim': cosine_sim}, f)
+        pickle.dump({'df': df_final, 'indices': indices, 'cosine_sim': cosine_sim}, f)
         
     print(f"Model successfully built and saved to {MODEL_FILE}")
 
