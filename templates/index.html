@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Mood Matcher AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>VibeMatch</h1>
+        <p>Find your next favorite movie based on what you love!</p>
+        <p>Enter a movie you love, and our AI will find similar titles based on plot and mood!</p>
+        
+        <form id="recommendation-form">
+            <input type="text" id="movie-input" placeholder="e.g., Avatar, The Dark Knight, Titanic" required>
+            <button type="submit">Get Recommendations</button>
+        </form>
+
+        <div id="results-container">
+            <h2>Your Recommendations:</h2>
+            <ul id="recommendation-list">
+                <li class="placeholder-text">Enter a movie title above to start.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('recommendation-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const movieTitle = document.getElementById('movie-input').value.trim();
+        const resultsContainer = document.getElementById('results-container');
+        const list = document.getElementById('recommendation-list');
+
+        // --- FIX 1: CLEAR ALL PREVIOUS DYNAMIC CONTENT ---
+        // 1. Remove the old header (if it exists)
+        const oldHeader = resultsContainer.querySelector('h3');
+        if (oldHeader) {
+            oldHeader.remove();
+        }
+
+        // 2. Set the initial loading state for the list
+        list.innerHTML = `<li class="loading-text">Loading recommendations for "${movieTitle}"...</li>`;
+        
+        // --- End FIX 1 ---
+
+        try {
+            // 1. Send request to Flask API
+            const response = await fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // Send the movie title as JSON payload
+                body: JSON.stringify({ movie_title: movieTitle })
+            });
+
+            // --- FIX 2: Check for ANY error status (4xx or 5xx) immediately ---
+            // Try to parse JSON for the error message, but handle non-JSON body if the server crashed
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                // If JSON parsing fails (e.g., received an HTML 500 error page)
+                list.innerHTML = '<li class="error-text">Server Error: Could not process request. (Check console for details).</li>';
+                console.error("Server returned non-JSON response, likely a 500 error:", await response.text());
+                return; // Stop execution here
+            }
+
+            if (response.ok) {
+                // Success (200 OK)
+                list.innerHTML = ''; // Clear loading message
+
+                // Create and insert the new matched title header
+                const matchHeader = document.createElement('h3');
+                matchHeader.innerHTML = `Recommendations based on: <strong>${data.matched_title}</strong>`;
+                resultsContainer.prepend(matchHeader); 
+
+                // Populate the list
+                if (data.recommendations.length > 0) {
+                    data.recommendations.forEach((movie, index) => {
+                        const li = document.createElement('li');
+                        li.textContent = `${index + 1}. ${movie}`;
+                        list.appendChild(li);
+                    });
+                } else {
+                    list.innerHTML = '<li class="error-text">No similar movies found.</li>';
+                }
+
+            } else {
+                // Handle API error (e.g., 404 from fuzzy match failure)
+                list.innerHTML = `<li class="error-text">Error: ${data.error || 'Unknown API Error'}</li>`;
+            }
+
+        } catch (error) {
+            // Catches network failures (server offline, connection dropped, etc.)
+            console.error('Network Fetch error:', error);
+            list.innerHTML = '<li class="error-text">Failed to connect to the recommendation service (Network Error).</li>';
+        }
+    });
+</script>
+</body>
+</html>

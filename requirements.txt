@@ -1,0 +1,7 @@
+Flask
+pandas
+scikit-learn
+numpy
+gunicorn  # For Heroku deployment
+thefuzz
+python-levenshtein  # Highly recommended for speed optimization (optional, but good practice)
