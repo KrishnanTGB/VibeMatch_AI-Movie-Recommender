@@ -38,7 +38,7 @@ def build_and_save_model():
     # --- STEP 2: CRITICAL SAMPLING FOR MEMORY ---
     
     # Clean 'vote_count' and sort
-    df['vote_count'] = pd.to_numeric(df['vote_count'], errors='coerce').fillna(0)
+    df.loc[:, 'vote_count'] = pd.to_numeric(df['vote_count'], errors='coerce').fillna(0)
     
     # Keep only the top TARGET_MOVIE_COUNT movies by vote_count
     df_filtered = df.sort_values('vote_count', ascending=False).head(TARGET_MOVIE_COUNT)
