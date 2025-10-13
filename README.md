@@ -42,19 +42,23 @@ The application is hosted on Render's Free Web Service. Please note that the ser
 | **Hosting** | Render Web Services (Free Tier) | Continuous deployment via GitHub. |
 
 ### Project Structure
-movie-recommender/
+
+To maintain clarity and separate code logic from the deployed model, the project is structured as follows:
+
+```text
+VibeMatch-Recommender/
 ├── data/
-│   ├── tmdb_5000_movies.csv
-│   └── new_movie_data.csv
+│   ├── tmdb_5000_movies.csv      # (Old data, kept for combination)
+│   └── new_movie_data.csv        # (New, up-to-date data source)
 ├── templates/
-│   └── index.html
+│   └── index.html                # HTML frontend for Flask
 ├── static/
-│   └── style.css
-├── model.pkl           # <--- The pre-trained 5K movie AI model
-├── app.py              # <--- The main Flask application (Gunicorn entry point)
-├── model_builder.py    # <--- Script used to build and optimize the model
-├── requirements.txt
-└── Procfile            # <--- Render/Gunicorn command file
+│   └── style.css                 # CSS styling
+├── model.pkl                     # <--- The final 5K movie AI model (built during deployment)
+├── app.py                        # <--- The main Flask application (Gunicorn entry point)
+├── model_builder.py              # Script used to build and optimize the model
+├── requirements.txt              # Project dependencies
+└── Procfile                      # Render/Gunicorn command file
 
 ### Local Installation
 
