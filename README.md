@@ -59,6 +59,7 @@ VibeMatch-Recommender/
 ├── model_builder.py              # Script used to build and optimize the model
 ├── requirements.txt              # Project dependencies
 └── Procfile                      # Render/Gunicorn command file
+```
 
 ### Local Installation
 
