@@ -1,6 +1,6 @@
 # 🎬 VibeMatch: AI Movie Recommender
 
-[![Project Status](https://img.shields.io/badge/Status-Deployed-brightgreen.svg)](YOUR_RENDER_URL_HERE)
+[![Project Status](https://img.shields.io/badge/Status-Deployed-brightgreen.svg)](https://vibematch-ai-movie-recommender.onrender.com/)
 [![Built With](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/Backend-Flask%2FGunicorn-lightgray)](https://render.com/)
 [![Hosting](https://img.shields.io/badge/Hosted%20On-Render%20Free%20Web%20Service-green)](https://render.com/)
@@ -69,7 +69,7 @@ movie-recommender/
 3.  **Setup Environment & Dependencies:**
     ```bash
     python -m venv venv
-    source venv/bin/activate (for Windows .\\venv\\Scripts\\activate)
+    source venv/bin/activate (for Windows .\venv\Scripts\activate)
     pip install -r requirements.txt
     ```
 
@@ -96,7 +96,7 @@ This project is configured for seamless deployment on Render:
 
 ---
 
-## 👤 Author & License
+## 👤 Author
 
 **Author:** Krishnan T G B
 
