@@ -5,7 +5,6 @@
 [![Framework](https://img.shields.io/badge/Backend-Flask%2FGunicorn-lightgray)](https://render.com/)
 [![Hosting](https://img.shields.io/badge/Hosted%20On-Render%20Free%20Web%20Service-green)](https://render.com/)
 [![Model](https://img.shields.io/badge/Model-Content%20Based%20Filtering-orange.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 🌟 Overview
 
